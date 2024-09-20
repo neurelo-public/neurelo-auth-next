@@ -5,7 +5,7 @@ import { AuthContext, Session } from './lib/types';
 import { getSessionCookieName } from './lib/common';
 export type * from './lib/types';
 import Cookies from 'universal-cookie';
-import { useRetrying } from './utils';
+import { useRetrying } from './lib/utils';
 import retry from 'async-retry';
 
 export type SessionContextValue = {

@@ -5,6 +5,11 @@ export type * from './lib/types';
 
 /**
  * Slimmed down version of the SDK configuration that only includes the API key and base path.
+ * 
+ * Usually you would import this from a neurelo-sdk package.
+ * 
+ * @example
+ * import { neureloConfig } from 'neurelo-sdk';
  */
 export interface SdkConfiguration {
     readonly apiKey?: string | Promise<string> | ((name: string) => string) | ((name: string) => Promise<string>);
@@ -58,11 +63,23 @@ async function getAuthContextFromSdkConfig(config: SdkConfiguration): Promise<Se
 }
 
 type AuthContextCommon = Omit<AuthContext, 'verifyToken'>;
+
+/**
+ * The server-side authentication context.
+ */
 type ServerAuthContext = AuthContextCommon & {
     // FIXME: Update these periodically
     readonly jwks: readonly jose.JWK[]
 };
 
+/**
+ * Verify a session token.
+ *
+ * @param authContext The authentication context.
+ * @param sessionToken The session token.
+ * @returns The session encoded in the token.
+ * @throws If the session token is invalid.
+ */
 async function verifyToken(authContext: ServerAuthContext, sessionToken: string): Promise<Session> {
     let firstError: Error | null = null;
     for (const jwk of authContext.jwks) {
@@ -80,9 +97,13 @@ async function verifyToken(authContext: ServerAuthContext, sessionToken: string)
     throw firstError;
 }
 
-export async function getAuthContext(authContextPromise: Promise<ServerAuthContext>): Promise<AuthContext> {
-    const authContext = await authContextPromise;
-
+/**
+ * Get the client authentication context from the server authentication context.
+ * 
+ * @param authContext The server authentication context.
+ * @returns The client authentication context.
+ */
+function getAuthContext(authContext: ServerAuthContext): AuthContext {
     return {
         authBaseUrl: authContext.authBaseUrl,
         environmentId: authContext.environmentId,
@@ -93,16 +114,30 @@ export async function getAuthContext(authContextPromise: Promise<ServerAuthConte
     };
 }
 
+/**
+ * Initialize Neurelo Auth.
+ * 
+ * @example
+ * // file: app/context.ts
+ * import NeureloAuth from '@neurelo/auth-next';
+ * import { neureloConfig } from 'neurelo-sdk';
+ * 
+ * const { getAuthContext } = NeureloAuth({
+ *    neureloConfig,
+ * });
+ * export { getAuthContext };
+ * 
+ * @param neureloConfig The Neurelo SDK configuration.
+ * @returns Initialized Neurelo Auth.
+ */
 export default function NeureloAuth({
     neureloConfig,
 }: {
     neureloConfig: SdkConfiguration;
 }) {
-    const authContextPromise = getAuthContextFromSdkConfig(neureloConfig);
+    const serverAuthContextPromise = getAuthContextFromSdkConfig(neureloConfig);
+    const authContextPromise = serverAuthContextPromise.then(authContext => getAuthContext(authContext));
     return {
-        getAuthContext: async () => {
-            'use server';
-            return getAuthContext(authContextPromise);
-        }
+        getAuthContext: async () => authContextPromise,
     }
 }
