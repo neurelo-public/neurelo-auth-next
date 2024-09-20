@@ -28,9 +28,10 @@ const { getAuthContext } = NeureloAuth({
 export { getAuthContext };
 ```
 
-As a last step, add the `SessionProvider` to `app/layout.tsx`
+As a last step, add the `SessionProvider` the root layout.
 
-```.ts
+```.tsx
+// app/layout.tsx
 import { SessionProvider } from "@neurelo/auth-next/react";
 import { getAuthContext } from "./neurelo-auth";
 
