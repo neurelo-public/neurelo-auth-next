@@ -73,3 +73,5 @@ export default function MyComponent() {
   );
 }
 ```
+
+For a complete example you can also check out the example [here](https://github.com/neurelo-public/neurelo-auth-next/tree/main/example).
