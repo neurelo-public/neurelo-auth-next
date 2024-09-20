@@ -1,7 +1,7 @@
-import neureloAuthNext from 'neurelo-auth-next';
+import NeureloAuth from 'neurelo-auth-next';
 import { neureloConfig } from 'neurelo-sdk';
 
-const { getAuthContext } = neureloAuthNext({
+const { getAuthContext } = NeureloAuth({
     neureloConfig,
 })
 export { getAuthContext }

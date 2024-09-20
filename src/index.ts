@@ -98,23 +98,6 @@ async function verifyToken(authContext: ServerAuthContext, sessionToken: string)
 }
 
 /**
- * Get the client authentication context from the server authentication context.
- * 
- * @param authContext The server authentication context.
- * @returns The client authentication context.
- */
-function getAuthContext(authContext: ServerAuthContext): AuthContext {
-    return {
-        authBaseUrl: authContext.authBaseUrl,
-        environmentId: authContext.environmentId,
-        verifyToken: async (sessionToken: string) => {
-            'use server';
-            return verifyToken(authContext, sessionToken);
-        }
-    };
-}
-
-/**
  * Initialize Neurelo Auth.
  * 
  * @example
@@ -136,8 +119,18 @@ export default function NeureloAuth({
     neureloConfig: SdkConfiguration;
 }) {
     const serverAuthContextPromise = getAuthContextFromSdkConfig(neureloConfig);
-    const authContextPromise = serverAuthContextPromise.then(authContext => getAuthContext(authContext));
     return {
-        getAuthContext: async () => authContextPromise,
+        getAuthContext: async () => {
+            'use server';
+            const authContext = await serverAuthContextPromise;
+            return {
+                authBaseUrl: authContext.authBaseUrl,
+                environmentId: authContext.environmentId,
+                verifyToken: async (sessionToken: string) => {
+                    'use server';
+                    return verifyToken(authContext, sessionToken);
+                }
+            };
+        },
     }
 }
