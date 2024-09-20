@@ -75,3 +75,36 @@ export default function MyComponent() {
 ```
 
 For a complete example you can also check out the example [here](https://github.com/neurelo-public/neurelo-auth-next/tree/main/example).
+
+# Development
+
+To develop @neurelo/auth-next first install all the dependencies
+
+```
+npm install
+```
+
+After that, you can run the example by running
+
+```
+npm run dev
+```
+
+This will watch for code-changes in both the library and the example so that you can debug live.
+
+```
+5:04:54 PM - Starting compilation in watch mode...
+[build]
+[example]
+[example] > dev
+[example] > next dev
+[example]
+[build]
+[build] 5:04:54 PM - Found 0 errors. Watching for file changes.
+[example]   ▲ Next.js 14.2.12
+[example]   - Local:        http://localhost:1234
+[example]   - Environments: .env
+[example]
+[example]  ✓ Starting...
+[example]  ✓ Ready in 1340ms
+```
