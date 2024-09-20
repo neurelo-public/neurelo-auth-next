@@ -1,9 +1,9 @@
 'use client'
 import React, { useCallback } from 'react';
 import { useState, useEffect } from 'react';
-import { AuthContext, Session } from './types';
-import { getSessionCookieName } from './common';
-export type * from './types';
+import { AuthContext, Session } from './lib/types';
+import { getSessionCookieName } from './lib/common';
+export type * from './lib/types';
 import Cookies from 'universal-cookie';
 import { useRetrying } from './utils';
 import retry from 'async-retry';

@@ -1,7 +1,7 @@
 import * as jose from 'jose';
-import { AuthContext, Session } from './types';
-import { getSessionFromPayload } from './common';
-export type * from './types';
+import { AuthContext, Session } from './lib/types';
+import { getSessionFromPayload } from './lib/common';
+export type * from './lib/types';
 
 /**
  * Slimmed down version of the SDK configuration that only includes the API key and base path.
