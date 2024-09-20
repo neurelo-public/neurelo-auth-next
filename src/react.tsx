@@ -16,6 +16,19 @@ export type SessionContextValue = {
 
 const SessionContext = React.createContext<SessionContextValue | undefined>(undefined);
 
+/**
+ * Get the current session in a react component.
+ *
+ * @example
+ * function MyComponent() {
+ *   const { data: session, signIn, signOut } = useSession();
+ *   if (session) {
+ *     return <div>Hello, {session.user.name}!</div>;
+ *   } else {
+ *     return <button onClick={signIn}>Sign in</button>;
+ *   }
+ * }
+ */
 export function useSession(): SessionContextValue {
     const context = React.useContext(SessionContext);
     if (!context) {
@@ -29,6 +42,31 @@ export type SessionProviderProps = {
     children: React.ReactNode;
 }
 
+/**
+ * Top-level react client component for initializing user auth.
+ *
+ * @example
+ * // file: app/layout.tsx
+ * import "./globals.css";
+ * import { SessionProvider } from "neurelo-auth-next/react";
+ * import { getAuthContext } from "./context";
+ *
+ * export default function RootLayout({
+ *   children,
+ * }: {
+ *   children: React.ReactNode;
+ * }) {
+ *   return (
+ *     <html lang="en">
+ *       <body>
+ *         <SessionProvider context={getAuthContext}>
+ *           {children}
+ *         </SessionProvider>
+ *       </body>
+ *     </html>
+ *   );
+ * }
+ */
 export function SessionProvider({ children, context }: SessionProviderProps) {
     const [sessionToken, setSessionToken] = useState<string | null>(null);
     const [locationHash, setLocationHash] = useState(undefined as string | undefined);
