@@ -11,7 +11,7 @@ First add `@neurelo/auth-next` and your Neurelo TypeScript SDK to your NextJS ap
 cp ~/Downloads/neurelo-sdk-typescript-cmt....tgz .
 
 # Install packages
-npm i --save @neurelo/auth-next ./neurelo-sdk-typescript-cmt_9039d2.tgz
+npm i --save @neurelo/auth-next ./neurelo-sdk-typescript-cmt....tgz
 ```
 
 Then initialize the package with your SDK configuration.
@@ -21,11 +21,11 @@ Then initialize the package with your SDK configuration.
 import { neureloConfig } from "neurelo-sdk";
 import NeureloAuth from "@neurelo/auth-next";
 
-const { getAuthContext } = NeureloAuth({
-    neureloConfig,
+const { getAuthContext, getSession, signIn, signOut } = NeureloAuth({
+  neureloConfig,
 });
 
-export { getAuthContext };
+export { getAuthContext, getSession, signIn, signOut };
 ```
 
 As a last step, add the `SessionProvider` the root layout.
@@ -54,13 +54,15 @@ export default function RootLayout({
 }
 ```
 
-Now you can access the session state in any of your components.
+## Client Components
+
+You can access the session state in client components using the `useSession` hook.
 
 ```.tsx
 import { useSession } from "@neurelo/auth-next/react";
 
 export default function MyComponent() {
-  const { data: session, signIn, signOut } = useSession();
+  const { session, signIn, signOut } = useSession();
 
   return (
     <div>
@@ -74,17 +76,38 @@ export default function MyComponent() {
 }
 ```
 
-For a complete example you can also check out the example [here](https://github.com/neurelo-public/neurelo-auth-next/tree/main/example).
+## Server Components
+
+To get and manipulate the session you can use the functions returned and re-exported from `NeureloAuth` directly.
+
+```.ts
+import { getSession, signIn, signOut } from './context';
+```
+
+## Example
+
+For a complete example you can also check out the example [here](https://github.com/neurelo-public/neurelo-auth-next/tree/main/example). The easiest way to run this is to follow the [Development](#development) section.
 
 # Development
 
-To develop @neurelo/auth-next first install all the dependencies
+To develop @neurelo/auth-next you will need a project set up for auth (see https://docs.neurelo.com/guides/guides/user-auth).
+
+After you set up your environment, create a `.env` file from the example
+
+```
+# Copy the example environment
+cp example/.env.example example/.env
+# Fill in the environment
+vim example/.env
+```
+
+After that, you will need to install the dependencies.
 
 ```
 npm install
 ```
 
-After that, you can run the example by running
+Now you are ready to run the example project in dev-mode
 
 ```
 npm run dev
@@ -102,7 +125,7 @@ This will watch for code-changes in both the library and the example so that you
 [build]
 [build] 5:04:54 PM - Found 0 errors. Watching for file changes.
 [example]   ▲ Next.js 14.2.12
-[example]   - Local:        http://localhost:1234
+[example]   - Local:        http://localhost:3000
 [example]   - Environments: .env
 [example]
 [example]  ✓ Starting...
