@@ -2,39 +2,39 @@
  * The client-side authentication context.
  */
 export type AuthContext = {
-    /**
-     * The base URL for the authentication service.
-     */
-    readonly authBaseUrl: string;
+  /**
+   * The base URL for the authentication service.
+   */
+  readonly authBaseUrl: string;
 
-    /**
-     * The environment ID.
-     */
-    readonly environmentId: string;
+  /**
+   * The environment ID.
+   */
+  readonly environmentId: string;
 
-    /**
-     * Verify a session token.
-     *
-     * @param sessionToken The session token.
-     * @returns The session encoded in the token.
-     * @throws If the session token is invalid.
-     */
-    readonly verifyToken: (sessionToken: string) => Promise<Session>
+  /**
+   * Verify a session token.
+   *
+   * @param sessionToken The session token.
+   * @returns The session encoded in the token.
+   * @throws If the session token is invalid.
+   */
+  readonly verifyToken: (sessionToken: string) => Promise<Session>;
 
-    /**
-     * Redirect the browser to the sign in page.
-     */
-    readonly signIn: () => Promise<never>;
+  /**
+   * Redirect the browser to the sign in page.
+   */
+  readonly signIn: () => Promise<never>;
 
-    /**
-     * Sign out the currently logged in user.
-     */
-    readonly signOut: () => Promise<void>;
-}
+  /**
+   * Sign out the currently logged in user.
+   */
+  readonly signOut: () => Promise<void>;
+};
 
 /**
  * A user session.
- * 
+ *
  * @example
  * ```typescript
  * const session: Session = {
@@ -51,33 +51,33 @@ export type AuthContext = {
  * };
  */
 export type Session = {
-    /**
-     * Some basic user information. This reflects the `neureloAuthUser` object in the database.
-     */
-    readonly user: {
-        readonly id: string;
-        readonly name: string | null;
-        readonly email: string | null;
-        readonly image: string | null;
-    };
+  /**
+   * Some basic user information. This reflects the `neureloAuthUser` object in the database.
+   */
+  readonly user: {
+    readonly id: string;
+    readonly name: string | null;
+    readonly email: string | null;
+    readonly image: string | null;
+  };
 
-    /**
-     * The authentication provider id that was used to authenticate the user.
-     */
-    readonly provider: string;
+  /**
+   * The authentication provider id that was used to authenticate the user.
+   */
+  readonly provider: string;
 
-    /**
-     * The account id for the user with the authentication provider.
-     */
-    readonly provider_account_id: string;
+  /**
+   * The account id for the user with the authentication provider.
+   */
+  readonly provider_account_id: string;
 
-    /**
-     * The time at which the session should be refreshed.
-     */
-    readonly refresh_at: Date;
+  /**
+   * The time at which the session should be refreshed.
+   */
+  readonly refresh_at: Date;
 
-    /**
-     * The time at which the session expires.
-     */
-    readonly expires: Date;
-}
+  /**
+   * The time at which the session expires.
+   */
+  readonly expires: Date;
+};
