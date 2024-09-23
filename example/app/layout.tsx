@@ -1,4 +1,4 @@
-import { SessionProvider } from 'neurelo-auth-next/react';
+import { SessionProvider } from '@neurelo/auth-next/react';
 import { getAuthContext } from './context';
 import './globals.css';
 

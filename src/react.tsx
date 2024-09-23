@@ -8,7 +8,7 @@ import { useRetrying } from './lib/utils';
 export type * from './lib/types';
 
 export type SessionContextValue = {
-  data: Session | null;
+  session: Session | null;
   signIn: () => void;
   signOut: () => void;
 };
@@ -224,7 +224,7 @@ export function SessionProvider({ children, context }: SessionProviderProps) {
   }, [authConfig]);
 
   return (
-    <SessionContext.Provider value={{ data: session, signIn, signOut }}>
+    <SessionContext.Provider value={{ session: session, signIn, signOut }}>
       {children}
     </SessionContext.Provider>
   );

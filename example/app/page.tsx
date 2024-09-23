@@ -1,6 +1,7 @@
 'use client';
-import { useSession } from 'neurelo-auth-next/react';
+import { useSession } from '@neurelo/auth-next/react';
 import { useEffect, useState } from 'react';
+import { getUserInfo } from './userinfo';
 
 function SignIn() {
   let { signIn } = useSession();
@@ -12,18 +13,17 @@ function SignIn() {
   );
 }
 
-function SignOut({ children }: { children: React.ReactNode }) {
+function SignOut() {
   let { signOut } = useSession();
   return (
     <form action={signOut}>
-      <p>{children}</p>
       <button type="submit">Sign out</button>
     </form>
   );
 }
 
 export default function Page() {
-  let { data: session } = useSession();
+  let { session } = useSession();
   let user = session?.user;
 
   const [refreshIn, setRefreshIn] = useState<number | undefined>();
@@ -38,22 +38,49 @@ export default function Page() {
     return () => clearInterval(interval);
   }, [session]);
 
+  const [userInfo, setUserInfo] = useState<unknown | Error>();
+
   return (
     <section>
-      <h1>Home</h1>
+      <h1>Neurelo User Auth</h1>
       <div>
         {user ? (
-          <SignOut>
-            <>
+          <>
+            <p>
               {`Welcome ${user.name}`}
               <br />
-              {`You are signed in with ${session!.provider}`}
-              <br />
-              {`Your session will expire at ${session!.expires.toLocaleString()}`}
-              <br />
               {`Your session will refresh in ${Math.round(refreshIn!)} seconds`}
-            </>
-          </SignOut>
+            </p>
+            <SignOut />
+            <h2>Raw Session</h2>
+            <pre>{JSON.stringify(session, null, 2)}</pre>
+            <h2>UserInfo</h2>
+            <p>
+              You can get the raw user info from the authentication provider using the raw session
+              token stored in your database.
+            </p>
+            <input
+              type="button"
+              value="Fetch User Info"
+              onClick={async () => {
+                try {
+                  const userInfo = await getUserInfo();
+                  setUserInfo(userInfo);
+                } catch (error) {
+                  setUserInfo(error);
+                }
+              }}
+            />
+            {userInfo &&
+              (userInfo instanceof Error ? (
+                <p>Error fetching user info: {userInfo.message}</p>
+              ) : (
+                <>
+                  <p>Last fetched user info</p>
+                  <pre>{JSON.stringify(userInfo, null, 2)}</pre>
+                </>
+              ))}
+          </>
         ) : (
           <SignIn />
         )}

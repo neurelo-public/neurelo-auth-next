@@ -1,14 +1,14 @@
 {
   "private": true,
   "scripts": {
-    "postinstall": "cd node_modules/neurelo-auth-next && npm run build",
+    "postinstall": "cd node_modules/@neurelo/auth-next && npm run build",
     "dev": "next dev",
     "build": "next build",
     "start": "next start"
   },
   "dependencies": {
-    "neurelo-auth-next": "file:..",
-    "neurelo-sdk": "file:neurelo-sdk-typescript-cmt_9039d2.tgz",
+    "@neurelo/auth-next": "file:..",
+    "neurelo-sdk": "file:neurelo-sdk-typescript-cmt_1bc0dc.tgz",
     "next": "latest",
     "react": "latest",
     "react-dom": "latest"

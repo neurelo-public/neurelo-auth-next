@@ -16,7 +16,7 @@ export function getSessionFromPayload(payload: jose.JWTPayload): Session {
       image: (payload.picture ?? null) as string | null,
     },
     provider: payload.provider as string,
-    provider_account_id: payload.sub as string,
+    provider_account_id: payload.provider_account_id as string,
     refresh_at: new Date((payload as any).refresh_at! * 1000),
     expires: new Date(payload.exp! * 1000),
   };
