@@ -2,9 +2,9 @@
 import retry from 'async-retry';
 import React, { useCallback, useEffect, useState } from 'react';
 import { useCookies } from 'react-cookie';
+import useSWR from 'swr';
 import { getSessionCookieName } from './lib/common';
 import { AuthContext, Session } from './lib/types';
-import { useRetrying } from './lib/utils';
 export type * from './lib/types';
 
 export type SessionContextValue = {
@@ -78,10 +78,13 @@ export function SessionProvider({ children, context }: SessionProviderProps) {
     }
     return context;
   }, [context]);
-  const authConfig = useRetrying(getContext);
+  const { data: authConfig } = useSWR('auth-context', getContext, {
+    onError: (error) => {
+      console.error('Error loading auth context', error);
+    },
+  });
 
-  const sessionCookieName =
-    authConfig.kind === 'success' ? getSessionCookieName(authConfig.value) : null;
+  const sessionCookieName = authConfig ? getSessionCookieName(authConfig) : null;
   const [cookies, setCookie, removeCookie, updateCookies] = useCookies();
   const sessionToken: string | null = sessionCookieName ? cookies[sessionCookieName] ?? null : null;
   const setSessionToken = (newSessionToken: string | null) => {
@@ -111,7 +114,7 @@ export function SessionProvider({ children, context }: SessionProviderProps) {
   }, []);
 
   useEffect(() => {
-    if (authConfig.kind !== 'success') {
+    if (!authConfig) {
       return;
     }
     if (locationHash && locationHash.match(/^#sessionToken=/)) {
@@ -126,7 +129,7 @@ export function SessionProvider({ children, context }: SessionProviderProps) {
   const [session, setSession] = useState<Session | null>(null);
   // Listen for changes to the session token and update the session
   useEffect(() => {
-    if (authConfig.kind !== 'success') {
+    if (!authConfig) {
       return;
     }
     console.debug('Session token changed', sessionToken);
@@ -134,7 +137,7 @@ export function SessionProvider({ children, context }: SessionProviderProps) {
       const doVerify = async () => {
         console.debug('Verifying session token');
         try {
-          const session = await authConfig.value.verifyToken(sessionToken);
+          const session = await authConfig.verifyToken(sessionToken);
           console.debug('Session verified', session);
           setSession(session);
         } catch (error) {
@@ -150,7 +153,7 @@ export function SessionProvider({ children, context }: SessionProviderProps) {
 
   // Run a periodic task to refresh the session
   useEffect(() => {
-    if (!session || authConfig?.kind !== 'success') {
+    if (!session || !authConfig) {
       return;
     }
     const refreshAt = session.refresh_at;
@@ -168,7 +171,7 @@ export function SessionProvider({ children, context }: SessionProviderProps) {
         await retry(
           async (bail) => {
             bailFn = bail;
-            const newSessionRes = await fetch(authConfig.value.authBaseUrl + '/session', {
+            const newSessionRes = await fetch(authConfig.authBaseUrl + '/session', {
               headers: {
                 Authorization: `Bearer ${sessionToken}`,
               },
@@ -207,16 +210,16 @@ export function SessionProvider({ children, context }: SessionProviderProps) {
   }, [authConfig, session]);
 
   const signIn = useCallback(() => {
-    if (authConfig.kind === 'success') {
-      authConfig.value.signIn();
+    if (authConfig) {
+      authConfig.signIn();
     } else {
       console.error('Not ready to sign in yet');
     }
   }, [authConfig]);
 
   const signOut = useCallback(async () => {
-    if (authConfig.kind === 'success') {
-      await authConfig.value.signOut();
+    if (authConfig) {
+      await authConfig.signOut();
       updateCookies();
     } else {
       console.error('Not ready to sign out yet');
