@@ -29,6 +29,6 @@ export function getSessionFromPayload(payload: jose.JWTPayload): Session {
  * @param context The authentication context.
  * @returns The name of the session cookie name.
  */
-export function getSessionCookieName(context: AuthContext): string {
+export function getSessionCookieName(context: Pick<AuthContext, 'environmentId'>): string {
     return `neurelo_session_${context.environmentId}`;
 }

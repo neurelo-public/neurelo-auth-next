@@ -1,6 +1,8 @@
 import * as jose from 'jose';
 import { AuthContext, Session } from './lib/types';
-import { getSessionFromPayload } from './lib/common';
+import { getSessionCookieName, getSessionFromPayload } from './lib/common';
+import { cookies } from 'next/headers';
+import { redirect } from 'next/navigation';
 export type * from './lib/types';
 
 /**
@@ -62,7 +64,7 @@ async function getAuthContextFromSdkConfig(config: SdkConfiguration): Promise<Se
     }
 }
 
-type AuthContextCommon = Omit<AuthContext, 'verifyToken'>;
+type AuthContextCommon = Pick<AuthContext, 'authBaseUrl'|'environmentId'>;
 
 /**
  * The server-side authentication context.
@@ -97,6 +99,42 @@ async function verifyToken(authContext: ServerAuthContext, sessionToken: string)
     throw firstError;
 }
 
+async function signIn(authContext: ServerAuthContext): Promise<never> {
+    redirect(authContext.authBaseUrl + '/signin');
+}
+
+async function signOut(authContext: ServerAuthContext): Promise<void> {
+    const cookieStore = cookies();
+    const cookieName = getSessionCookieName(authContext);
+    cookieStore.delete(cookieName);
+}
+
+/**
+ * The result of invoking {@link NeureloAuth}.
+ * It contains methods to set up and interact with Neurelo User Auth in your Next.js app.
+ */
+export type NeureloAuthResult = {
+    /**
+     * Get the client-side authentication context.
+     */
+    getAuthContext: () => Promise<AuthContext>;
+
+    /**
+     * Get the session of the currently logged in user.
+     */
+    getSession: () => Promise<Session | null>;
+
+    /**
+     * Redirect the browser to the sign in page.
+     */
+    signIn: () => Promise<never>;
+
+    /**
+     * Sign out the currently logged in user.
+     */
+    signOut: () => Promise<void>;
+};
+
 /**
  * Initialize Neurelo Auth.
  * 
@@ -117,7 +155,7 @@ export default function NeureloAuth({
     neureloConfig,
 }: {
     neureloConfig: SdkConfiguration;
-}) {
+}): NeureloAuthResult {
     const serverAuthContextPromise = getAuthContextFromSdkConfig(neureloConfig);
     return {
         getAuthContext: async () => {
@@ -129,8 +167,37 @@ export default function NeureloAuth({
                 verifyToken: async (sessionToken: string) => {
                     'use server';
                     return verifyToken(authContext, sessionToken);
+                },
+                signIn: async () => {
+                    'use server';
+                    return await signIn(authContext);
+                },
+                signOut: async () => {
+                    'use server';
+                    return await signOut(authContext);
                 }
             };
         },
+        getSession: async () => {
+            'use server';
+            const cookieStore = cookies()
+            const authContext = await serverAuthContextPromise;
+            const cookieName = getSessionCookieName(authContext);
+            const sessionToken = cookieStore.get(cookieName);
+            if (!sessionToken) {
+                return null;
+            }
+            return verifyToken(authContext, sessionToken.value);
+        },
+        signIn: async () => {
+            'use server';
+            const authContext = await serverAuthContextPromise;
+            return await signIn(authContext);
+        },
+        signOut: async () => {
+            'use server';
+            const authContext = await serverAuthContextPromise;
+            return await signOut(authContext);
+        }
     }
 }

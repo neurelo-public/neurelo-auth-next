@@ -20,6 +20,16 @@ export type AuthContext = {
      * @throws If the session token is invalid.
      */
     readonly verifyToken: (sessionToken: string) => Promise<Session>
+
+    /**
+     * Redirect the browser to the sign in page.
+     */
+    readonly signIn: () => Promise<never>;
+
+    /**
+     * Sign out the currently logged in user.
+     */
+    readonly signOut: () => Promise<void>;
 }
 
 /**

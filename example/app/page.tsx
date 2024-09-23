@@ -34,7 +34,7 @@ export default function Page() {
   useEffect(() => {
     const updateRefreshIn = () => {
       if (session) {
-        setRefreshIn((session.refresh_at.getTime() - Date.now())/1000);
+        setRefreshIn((session.refresh_at.getTime() - Date.now()) / 1000);
       }
     }
     updateRefreshIn();

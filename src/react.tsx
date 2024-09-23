@@ -4,9 +4,9 @@ import { useState, useEffect } from 'react';
 import { AuthContext, Session } from './lib/types';
 import { getSessionCookieName } from './lib/common';
 export type * from './lib/types';
-import Cookies from 'universal-cookie';
 import { useRetrying } from './lib/utils';
 import retry from 'async-retry';
+import { useCookies } from 'react-cookie';
 
 export type SessionContextValue = {
     data: Session | null;
@@ -68,7 +68,6 @@ export type SessionProviderProps = {
  * }
  */
 export function SessionProvider({ children, context }: SessionProviderProps) {
-    const [sessionToken, setSessionToken] = useState<string | null>(null);
     const [locationHash, setLocationHash] = useState(undefined as string | undefined);
 
     const getContext = useCallback(async () => {
@@ -81,6 +80,23 @@ export function SessionProvider({ children, context }: SessionProviderProps) {
         return context;
     }, [context]);
     const authConfig = useRetrying(getContext);
+
+    const sessionCookieName = authConfig.kind === 'success' ? getSessionCookieName(authConfig.value) : null;
+    const [cookies, setCookie, removeCookie, updateCookies] = useCookies();
+    const sessionToken: string | null = sessionCookieName ? (cookies[sessionCookieName] ?? null) : null;
+    const setSessionToken = (newSessionToken: string | null) => {
+        if (!sessionCookieName) {
+            console.error('No session cookie name');
+            return;
+        }
+        if (!newSessionToken) {
+            console.debug('Removing session token');
+            removeCookie(sessionCookieName);
+        } else {
+            console.debug('Setting session token', newSessionToken);
+            setCookie(sessionCookieName, newSessionToken, { sameSite: true });
+        }
+    }
 
     useEffect(() => {
         console.debug('Setting up hash listener');
@@ -98,18 +114,12 @@ export function SessionProvider({ children, context }: SessionProviderProps) {
         if (authConfig.kind !== 'success') {
             return;
         }
-        const cookieName = getSessionCookieName(authConfig.value);
-        const cookies = new Cookies();
-        const sessionTokenCurrent = cookies.get(cookieName);
         if (locationHash && locationHash.match(/^#sessionToken=/)) {
-            console.debug('Setting session token from hash');
+            console.debug('Setting session token from hash', locationHash);
             const newSessionToken = locationHash.replace('#sessionToken=', '');
-            cookies.set(cookieName, newSessionToken, { sameSite: true });
-            history.replaceState(null, '', window.location.pathname + window.location.search);
             setSessionToken(newSessionToken);
-        } else if (sessionTokenCurrent && !sessionToken) {
-            console.debug('Setting session token from cookie');
-            setSessionToken(sessionTokenCurrent);
+            setLocationHash(undefined);
+            history.replaceState(null, '', window.location.pathname + window.location.search);
         }
     }, [authConfig, locationHash]);
 
@@ -119,7 +129,7 @@ export function SessionProvider({ children, context }: SessionProviderProps) {
         if (authConfig.kind !== 'success') {
             return;
         }
-        console.debug('Session token changed');
+        console.debug('Session token changed', sessionToken);
         if (sessionToken) {
             const doVerify = async () => {
                 console.debug('Verifying session token');
@@ -134,6 +144,7 @@ export function SessionProvider({ children, context }: SessionProviderProps) {
             doVerify();
         } else {
             console.debug('No session token');
+            setSession(null);
         }
     }, [sessionToken]);
 
@@ -146,11 +157,9 @@ export function SessionProvider({ children, context }: SessionProviderProps) {
         const delay = refreshAt.getTime() - Date.now()
         let bailFn: ((error: Error) => void) | undefined;
         const timeout = setTimeout(async () => {
-            const cookies = new Cookies();
             if (session.expires.getTime() < Date.now()) {
                 console.debug('Session expired');
                 setSession(null);
-                cookies.remove(getSessionCookieName(authConfig.value));
                 setSessionToken(null);
                 return;
             }
@@ -196,23 +205,19 @@ export function SessionProvider({ children, context }: SessionProviderProps) {
 
     const signIn = useCallback(() => {
         if (authConfig.kind === 'success') {
-            window.location.href = authConfig.value!.authBaseUrl + '/signin';
+            authConfig.value.signIn();
         } else {
             console.error('Not ready to sign in yet');
         }
     }, [authConfig]);
 
-    const signOut = useCallback(() => {
-        if (authConfig.kind !== 'success') {
-            debugger
+    const signOut = useCallback(async () => {
+        if (authConfig.kind === 'success') {
+            await authConfig.value.signOut();
+            updateCookies();
+        } else {
             console.error('Not ready to sign out yet');
-            return;
         }
-        const cookieName = getSessionCookieName(authConfig.value);
-        // FIXME: This should be a configuration option
-        const cookies = new Cookies();
-        cookies.remove(cookieName);
-        setSession(null);
     }, [authConfig]);
 
     return (
