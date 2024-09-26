@@ -1,5 +1,8 @@
 {
   "name": "@neurelo/auth-next",
+  "publishConfig": {
+    "access": "public"
+  },
   "version": "0.1.0-beta.0",
   "description": "NextJS wrapper for Neurelo User Auth",
   "homepage": "https://github.com/neurelo-public/neurelo-auth-next",
@@ -24,15 +27,23 @@
   ],
   "exports": {
     ".": {
-      "import": "./dist/index.js"
+      "import": "./dist/index.js",
+      "types": "./dist/index.d.ts"
     },
     "./react": {
-      "import": "./dist/react.js"
+      "import": "./dist/react.js",
+      "types": "./dist/react.d.ts"
     }
+  },
+  "bugs": {
+    "url": "https://github.com/neurelo-public/neurelo-auth-next/issues"
   },
   "scripts": {
     "build": "tsc",
-    "dev": "concurrently --names build,example \"tsc --watch\" \"npm run dev --prefix example\""
+    "dev": "concurrently --names build,example \"tsc --watch\" \"npm run dev --prefix example\"",
+    "prepare": "rm -rf dist && tsc",
+    "prepublishOnly": "npm run build",
+    "publish-beta": "npm version prerelease --preid beta && npm publish --tag beta"
   },
   "devDependencies": {
     "@types/async-retry": "^1.4.8",
