@@ -1,6 +1,6 @@
 {
   "name": "@neurelo/auth-next",
-  "version": "0.0.0",
+  "version": "0.1.0-beta.0",
   "description": "NextJS wrapper for Neurelo User Auth",
   "homepage": "https://github.com/neurelo-public/neurelo-auth-next",
   "repository": {
