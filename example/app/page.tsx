@@ -22,21 +22,33 @@ function SignOut() {
   );
 }
 
+function Timeuntil({ timestamp }: { timestamp: Date }) {
+  const getSecondsUntil = () => ((timestamp.getTime() - Date.now()) / 1000) | 0;
+  const [secondsUntil, setSecondsUntil] = useState(getSecondsUntil());
+  useEffect(() => {
+    const interval = setInterval(() => setSecondsUntil(getSecondsUntil()), 1000);
+    return () => clearInterval(interval);
+  }, [timestamp]);
+  const days = (secondsUntil / 86400) | 0;
+  let accountedSeconds = days * 86400;
+  const hours = ((secondsUntil - accountedSeconds) / 3600) | 0;
+  accountedSeconds += hours * 3600;
+  const minutes = ((secondsUntil - accountedSeconds) / 60) | 0;
+  accountedSeconds += minutes * 60;
+  const seconds = secondsUntil - accountedSeconds;
+  return (
+    <span>
+      {days ? `${days}d ` : ''}
+      {hours ? `${hours}h ` : ''}
+      {minutes ? `${minutes}m ` : ''}
+      {seconds}s
+    </span>
+  );
+}
+
 export default function Page() {
   let { session } = useSession();
   let user = session?.user;
-
-  const [refreshIn, setRefreshIn] = useState<number | undefined>();
-  useEffect(() => {
-    const updateRefreshIn = () => {
-      if (session) {
-        setRefreshIn((session.refresh_at.getTime() - Date.now()) / 1000);
-      }
-    };
-    updateRefreshIn();
-    const interval = setInterval(updateRefreshIn, 1000);
-    return () => clearInterval(interval);
-  }, [session]);
 
   const [userInfo, setUserInfo] = useState<unknown | Error>();
 
@@ -49,7 +61,9 @@ export default function Page() {
             <p>
               {`Welcome ${user.name}`}
               <br />
-              {`Your session will refresh in ${Math.round(refreshIn!)} seconds`}
+              {`Your session will refresh in `}
+              <Timeuntil timestamp={session!.refresh_at} />
+              {`.`}
             </p>
             <SignOut />
             <h2>Raw Session</h2>
