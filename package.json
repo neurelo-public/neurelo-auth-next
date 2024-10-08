@@ -43,7 +43,7 @@
     "dev": "concurrently --names build,example \"tsc --watch\" \"npm run dev --prefix example\"",
     "prepare": "rm -rf dist && tsc",
     "prepublishOnly": "npm run build",
-    "publish-beta": "npm version prerelease --preid beta && npm publish --tag beta"
+    "publish-beta": "npm version prerelease --preid beta && npm publish --tag beta --access public"
   },
   "devDependencies": {
     "@types/async-retry": "^1.4.8",
