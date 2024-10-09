@@ -61,26 +61,28 @@ async function getAuthContextFromSdkConfig(config: SdkConfiguration): Promise<Se
       'Unable to decode API key. Please regenerate the key as it may be an old key format',
     );
   }
-  const jwksRes = await fetch(authContextBase.authBaseUrl + '/.well-known/jwks.json');
-  if (!jwksRes.ok) {
-    throw new Error('Failed to fetch JWKS');
-  }
-  const { keys } = await jwksRes.json();
-  return {
-    ...authContextBase,
-    jwks: keys as jose.JWK[],
-  };
+  return authContextBase;
 }
 
 type AuthContextCommon = Pick<AuthContext, 'authBaseUrl' | 'environmentId'>;
 
+const jwksCache: {
+  [authBaseUrl: string]: jose.JWTVerifyGetKey;
+} = {};
+
+function getJwks(context: ServerAuthContext): jose.JWTVerifyGetKey {
+  if (jwksCache[context.authBaseUrl]) {
+    return jwksCache[context.authBaseUrl];
+  }
+  const jwks = jose.createRemoteJWKSet(new URL(context.authBaseUrl + '/.well-known/jwks.json'));
+  jwksCache[context.authBaseUrl] = jwks;
+  return jwks;
+}
+
 /**
  * The server-side authentication context.
  */
-type ServerAuthContext = AuthContextCommon & {
-  // FIXME: Update these periodically
-  readonly jwks: readonly jose.JWK[];
-};
+type ServerAuthContext = AuthContextCommon;
 
 /**
  * Verify a session token.
@@ -91,20 +93,16 @@ type ServerAuthContext = AuthContextCommon & {
  * @throws If the session token is invalid.
  */
 async function verifyToken(authContext: ServerAuthContext, sessionToken: string): Promise<Session> {
-  let firstError: Error | null = null;
-  for (const jwk of authContext.jwks) {
-    try {
-      const key = await jose.importJWK(jwk);
-      const { payload } = await jose.jwtVerify(sessionToken, key, {
-        audience: authContext.environmentId,
-      });
-      return getSessionFromPayload(payload);
-    } catch (error) {
-      firstError ??= error as Error;
-    }
+  try {
+    const jwks = getJwks(authContext);
+    const { payload } = await jose.jwtVerify(sessionToken, jwks, {
+      audience: authContext.environmentId,
+    });
+    return getSessionFromPayload(payload);
+  } catch (error) {
+    console.error('Error verifying session token', error);
+    throw error;
   }
-  console.error('Error verifying session token', firstError);
-  throw firstError;
 }
 
 async function signIn(authContext: ServerAuthContext): Promise<never> {
