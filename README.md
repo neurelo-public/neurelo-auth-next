@@ -1,5 +1,7 @@
 # `@neurelo/auth-next` - NextJS wrapper for Neurelo User Auth
 
+[![NPM Version](https://img.shields.io/npm/v/%40neurelo%2Fauth-next)](https://www.npmjs.com/package/@neurelo/auth-next)
+
 If you have not set up your Neurelo project with User Auth yet, head to https://docs.neurelo.com/guides/user-auth for a guide to get started.
 
 # Usage
